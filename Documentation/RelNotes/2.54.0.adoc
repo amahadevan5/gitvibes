@@ -1,0 +1,105 @@
+Git v2.54 Release Notes
+=======================
+
+UI, Workflows & Features
+------------------------
+
+ * "git add -p" and friends note what the current status of the hunk
+   being shown is.
+
+ * "git history" history rewriting (experimental) command has been
+   added.
+
+
+ * "git replay" is taught to drop commits that become empty (not the
+   ones that are empty in the original).
+
+ * The help text and the documentation for the "--expire" option of
+   "git worktree [list|prune]" have been improved.
+
+ * When "git show-index" is run outside a repository, it silently
+   defaults to SHA-1; the tool now warns when this happens.
+
+
+Performance, Internal Implementation, Development Support etc.
+--------------------------------------------------------------
+
+ * Avoid local submodule repository directory paths overlapping with
+   each other by encoding submodule names before using them as path
+   components.
+
+ * The string_list API gains a new helper, string_list_sort_u(), and
+   new unit tests to extend coverage.
+
+ * Improve set-up time of a perf test.
+
+ * ISO C23 redefines strchr and friends that tradiotionally took
+   a const pointer and returned a non-const pointer derived from it to
+   preserve constness (i.e., if you ask for a substring in a const
+   string, you get a const pointer to the substring).  Update code
+   paths that used non-const pointer to receive their results that did
+   not have to be non-const to adjust.
+   (merge fc9fd8065c cf/c23-const-preserving-strchr-updates-0 later to maint).
+
+ * Rename three functions around the commit_list data structure.
+   (merge 9f18d089c5 ps/commit-list-functions-renamed later to maint).
+
+ * Transaction to create objects (or not) is currently tied to the
+   repository, but in the future a repository can have multiple object
+   sources, which may have different transaction mechanisms.  Make the
+   odb transaction API per object source.
+   (merge 3f67e3d021 jt/odb-transaction-per-source later to maint).
+
+ * "git merge-ours" is taught to work better in a sparse checkout.
+   (merge fb1b786ebf sb/merge-ours-sparse later to maint).
+
+
+Fixes since v2.53
+-----------------
+
+ * HTTP transport failed to authenticate in some code paths, which has
+   been corrected.
+   (merge ed0f7a62f7 ap/http-probe-rpc-use-auth later to maint).
+
+ * The computation of column width made by "git diff --stat" was
+   confused when pathnames contain non-ASCII characters.
+   (merge 04f5d95ef7 lp/diff-stat-utf8-display-width-fix later to maint).
+
+ * The "-z" and "--max-depth" documentation (and implementation of
+   "-z") in the "git last-modified" command have been updated.
+   (merge 9dcc09bed1 tc/last-modified-options-cleanup later to maint).
+
+ * A handful of code paths that started using batched ref update API
+   (after Git 2.51 or so) lost detailed error output, which have been
+   corrected.
+   (merge eff9299eac kn/ref-batch-output-error-reporting-fix later to maint).
+
+ * "git blame --ignore-revs=... --color-lines" did not account for
+   ignored revisions passing blame to the same commit an adjacent line
+   gets blamed for.
+   (merge d519082d4e rs/blame-ignore-colors-fix later to maint).
+
+ * Coccinelle rules update.
+   (merge 60614838a4 tc/memzero-array later to maint).
+
+ * Giving "git last-modified" a tree (not a commit-ish) died an
+   uncontrolled death, which has been corrected.
+   (merge 525ef52301 tc/last-modified-not-a-tree later to maint).
+
+ * Test contrib/ things in CI to catch breakages before they enter the
+   "next" branch.
+   (merge c591c3ceff jc/ci-test-contrib-too later to maint).
+
+ * Other code cleanup, docfix, build fix, etc.
+   (merge d79fff4a11 jk/remote-tracking-ref-leakfix later to maint).
+   (merge 7a747f972d dd/t5403-modernise later to maint).
+   (merge 81021871ea sp/myfirstcontribution-include-update later to maint).
+   (merge 49223593fd ac/sparse-checkout-string-list-cleanup later to maint).
+   (merge a824421d36 sp/t5500-cleanup later to maint).
+   (merge df1c5d7ed7 kh/doc-shortlog-fix later to maint).
+   (merge 2d45507f15 am/doc-github-contributiong-link-to-submittingpatches later to maint).
+   (merge 68060b9262 hs/t9160-test-paths later to maint).
+   (merge 486386c687 cs/subtree-reftable-testfix later to maint).
+   (merge 0728012c53 jc/diff-highlight-main-master-testfix later to maint).
+   (merge 831989ef38 mc/doc-send-email-signed-off-by-cc later to maint).
+   (merge c44b3f3203 sd/doc-my1c-api-config-reference-fix later to maint).
