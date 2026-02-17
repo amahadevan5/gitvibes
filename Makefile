@@ -1569,6 +1569,7 @@ LIBVIBES_OBJS += libvibes/tui/vibe-input.o
 LIBVIBES_OBJS += libvibes/tui/colors.o
 LIBVIBES_OBJS += libvibes/webui/server.o
 LIBVIBES_OBJS += libvibes/webui/api.o
+LIBVIBES_OBJS += libvibes/webui/websocket.o
 
 # SQLite amalgamation (compiled as third-party)
 LIBVIBES_OBJS += deps/sqlite3/sqlite3.o
