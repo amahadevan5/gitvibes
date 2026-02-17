@@ -35,6 +35,13 @@ const char *VIBES_PROMPT_DECOMPOSE =
 	"[{\"title\":\"task\",\"description\":\"what to do\","
 	"\"dependencies\":[],\"estimated_files\":[\"file.c\"],\"wave\":0}]";
 
+const char *VIBES_PROMPT_AUTOCOMPLETE =
+	"Complete this partial git intent. Suggest 3 short completions.\n\n"
+	"Partial input: \"%s\"\n\n"
+	"Repository files:\n%s\n\n"
+	"Respond with ONLY a JSON array of 3 completion strings:\n"
+	"[\"completion 1\", \"completion 2\", \"completion 3\"]";
+
 const char *VIBES_PROMPT_CONFLICT_RESOLVE =
 	"Resolve this merge conflict.\n\n"
 	"File: %s\n\nBase:\n%s\n\nOurs:\n%s\n\nTheirs:\n%s\n\n"
@@ -146,6 +153,23 @@ void vibes_prompt_decompose_intent(struct strbuf *out,
 {
 	strbuf_addf(out, VIBES_PROMPT_DECOMPOSE,
 		    goal, type, criteria, constraints, files);
+}
+
+void vibes_prompt_autocomplete(struct strbuf *out,
+			       const char *partial_input,
+			       const char *file_list)
+{
+	strbuf_addstr(out,
+		"You complete partial development intent descriptions. "
+		"Suggest 3 short, distinct completions. "
+		"Respond with ONLY a JSON array of 3 strings.\n\n");
+	strbuf_addf(out, "Partial input: \"%s\"\n\n", partial_input);
+	if (file_list)
+		strbuf_addf(out, "Repository context (files):\n%s\n\n",
+			    file_list);
+	strbuf_addstr(out,
+		"JSON format: [\"completion 1\", \"completion 2\", "
+		"\"completion 3\"]");
 }
 
 #endif /* VIBES_ENABLED */

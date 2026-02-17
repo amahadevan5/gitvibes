@@ -23,6 +23,9 @@ extern const char *VIBES_PROMPT_DECOMPOSE;
 /* Resolve merge conflict: args(file, base, ours, theirs) */
 extern const char *VIBES_PROMPT_CONFLICT_RESOLVE;
 
+/* Autocomplete a partial intent: args(partial_input, file_list) */
+extern const char *VIBES_PROMPT_AUTOCOMPLETE;
+
 /*
  * Build a full commit message prompt from components.
  * Writes the formatted prompt to `out`.
@@ -51,6 +54,14 @@ void vibes_prompt_decompose_intent(struct strbuf *out,
 				   const char *criteria,
 				   const char *constraints,
 				   const char *files);
+
+/*
+ * Build an autocomplete prompt for partial input.
+ * file_list may be NULL.
+ */
+void vibes_prompt_autocomplete(struct strbuf *out,
+			       const char *partial_input,
+			       const char *file_list);
 
 #endif /* VIBES_ENABLED */
 #endif /* LIBVIBES_AI_PROMPT_TEMPLATES_H */
