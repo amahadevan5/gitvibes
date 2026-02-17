@@ -27,6 +27,7 @@ static const char *VIBES_SCHEMA_SQL =
 	"    criteria TEXT,"
 	"    constraints TEXT,"
 	"    session_id TEXT,"
+	"    priority TEXT NOT NULL DEFAULT 'normal',"
 	"    created_at INTEGER NOT NULL,"
 	"    started_at INTEGER,"
 	"    completed_at INTEGER"
@@ -45,6 +46,7 @@ static const char *VIBES_SCHEMA_SQL =
 	"    branch TEXT,"
 	"    status TEXT NOT NULL CHECK(status IN ('pending','claimed','in_progress','completed','failed')),"
 	"    wave_number INTEGER NOT NULL DEFAULT 0,"
+	"    retry_count INTEGER NOT NULL DEFAULT 0,"
 	"    created_at INTEGER NOT NULL"
 	");"
 
@@ -142,6 +144,12 @@ int vibes_db_open(struct vibes_db *db, const char *path)
 
 	/* Initialize schema */
 	if (vibes_db_init_schema(db) < 0) {
+		vibes_db_close(db);
+		return -1;
+	}
+
+	/* Run any pending migrations */
+	if (vibes_db_run_migrations(db) < 0) {
 		vibes_db_close(db);
 		return -1;
 	}
@@ -271,21 +279,7 @@ int vibes_db_get_version(struct vibes_db *db)
 
 int vibes_db_migrate(struct vibes_db *db)
 {
-	int current = vibes_db_get_version(db);
-
-	if (current < 0)
-		return -1;
-	if (current >= VIBES_SCHEMA_VERSION)
-		return 0;
-
-	/*
-	 * Future migrations:
-	 * if (current < 2) { run_migration_v2(db); }
-	 * if (current < 3) { run_migration_v3(db); }
-	 */
-
-	db->schema_version = VIBES_SCHEMA_VERSION;
-	return 0;
+	return vibes_db_run_migrations(db);
 }
 
 #endif /* VIBES_ENABLED */

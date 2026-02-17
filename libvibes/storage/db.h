@@ -14,7 +14,7 @@ struct vibes_db {
 };
 
 /* Current schema version */
-#define VIBES_SCHEMA_VERSION 1
+#define VIBES_SCHEMA_VERSION 2
 
 /*
  * Open the vibes database at the given path.

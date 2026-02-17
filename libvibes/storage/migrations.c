@@ -12,14 +12,22 @@
  */
 
 /*
- * Example migration template for future use:
- *
- * static int migrate_v1_to_v2(struct vibes_db *db)
- * {
- *     return vibes_db_exec(db,
- *         "ALTER TABLE intents ADD COLUMN priority TEXT DEFAULT 'normal';");
- * }
+ * v1 → v2: Add priority to intents and retry tracking to tasks.
  */
+static int migrate_v1_to_v2(struct vibes_db *db)
+{
+	if (vibes_db_exec(db,
+		"ALTER TABLE intents ADD COLUMN priority "
+		"TEXT NOT NULL DEFAULT 'normal';") < 0)
+		return -1;
+
+	if (vibes_db_exec(db,
+		"ALTER TABLE tasks ADD COLUMN retry_count "
+		"INTEGER NOT NULL DEFAULT 0;") < 0)
+		return -1;
+
+	return 0;
+}
 
 int vibes_db_run_migrations(struct vibes_db *db)
 {
@@ -32,11 +40,8 @@ int vibes_db_run_migrations(struct vibes_db *db)
 	if (vibes_db_begin(db) < 0)
 		return -1;
 
-	/*
-	 * Migration dispatch:
-	 * if (current < 2 && migrate_v1_to_v2(db) < 0) goto fail;
-	 * if (current < 3 && migrate_v2_to_v3(db) < 0) goto fail;
-	 */
+	/* Migration dispatch */
+	if (current < 2 && migrate_v1_to_v2(db) < 0) goto fail;
 
 	/* Update stored version */
 	{
