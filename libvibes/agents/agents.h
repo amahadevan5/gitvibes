@@ -105,6 +105,13 @@ int vibes_agent_kill(pid_t pid);
 int vibes_agent_cleanup(struct vibes_db *db, const char *agent_id);
 int vibes_agent_list(struct vibes_db *db, struct string_list *out);
 
+/* --- Agent worker (agent-worker.c) --- */
+
+int vibes_agent_worker_main(const char *task_id, const char *agent_id,
+			    const char *db_path, int ipc_fd);
+int vibes_agent_worker_run(struct vibes_db *db, const char *agent_id,
+			   const char *worktree_path);
+
 /* --- Orchestrator (orchestrator.c) --- */
 
 int vibes_orchestrator_run(struct vibes_db *db, struct repository *repo,

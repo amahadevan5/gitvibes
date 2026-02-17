@@ -46,4 +46,30 @@ test_expect_success 'file lock operations work' '
 	test "$count" = "1"
 '
 
+test_expect_success 'vibes-decompose --worker requires task-id' '
+	test_expect_code 128 git vibes-decompose --worker 2>err &&
+	grep -q "requires --task-id" err
+'
+
+test_expect_success 'task queue claim and release work' '
+	sqlite3 .git/vibes.db <<-\EOSQL &&
+	INSERT INTO intents (id, type, raw_input, status, created_at)
+	VALUES ("INT_AGENT_TEST", "feature", "test intent",
+		"decomposed", strftime("%s"));
+	INSERT INTO tasks (id, intent_id, title, status,
+		wave_number, created_at)
+	VALUES ("TASK_Q1", "INT_AGENT_TEST", "queue test task",
+		"pending", 0, strftime("%s"));
+	EOSQL
+	count=$(sqlite3 .git/vibes.db \
+		"SELECT COUNT(*) FROM tasks WHERE status = '\''pending'\'' AND intent_id = '\''INT_AGENT_TEST'\'';") &&
+	test "$count" = "1"
+'
+
+test_expect_success 'orchestrator config reads max-agents' '
+	git config vibes.max-agents 0 &&
+	val=$(git config vibes.max-agents) &&
+	test "$val" = "0"
+'
+
 test_done
