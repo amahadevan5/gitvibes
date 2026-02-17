@@ -12,13 +12,11 @@ test_expect_success 'vibes-init creates database' '
 '
 
 test_expect_success 'vibes-init is idempotent' '
-	cd vibes-test &&
 	git vibes-init &&
 	test_path_is_file .git/vibes.db
 '
 
 test_expect_success 'vibes-init creates schema tables' '
-	cd vibes-test &&
 	sqlite3 .git/vibes.db ".tables" >tables.out &&
 	grep -q "intents" tables.out &&
 	grep -q "tasks" tables.out &&
@@ -31,7 +29,6 @@ test_expect_success 'vibes-init creates schema tables' '
 '
 
 test_expect_success 'vibes-init sets WAL mode' '
-	cd vibes-test &&
 	mode=$(sqlite3 .git/vibes.db "PRAGMA journal_mode;") &&
 	test "$mode" = "wal"
 '

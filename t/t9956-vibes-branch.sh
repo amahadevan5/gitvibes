@@ -14,17 +14,14 @@ test_expect_success 'setup repo for branch tests' '
 '
 
 test_expect_success 'vibes-branch detect detects convention' '
-	cd vibes-branch-test &&
 	git vibes-branch detect 2>&1 | grep -q -i "convention"
 '
 
 test_expect_success 'trunk-based detection for simple repo' '
-	cd vibes-branch-test &&
 	git vibes-branch detect 2>&1 | grep -q -i "trunk\|github"
 '
 
 test_expect_success 'vibes-branch with no args shows convention' '
-	cd vibes-branch-test &&
 	git vibes-branch 2>&1 | grep -q -i "convention"
 '
 

@@ -44,24 +44,20 @@ test_expect_success 'setup repo with source files' '
 '
 
 test_expect_success 'vibes-knowledge stats works on empty graph' '
-	cd vibes-kg-test &&
 	git vibes-knowledge stats 2>&1 | grep -q "node\|edge\|0"
 '
 
 test_expect_success 'vibes-knowledge index builds graph' '
-	cd vibes-kg-test &&
 	git vibes-knowledge index &&
 	nodes=$(sqlite3 .git/vibes.db "SELECT COUNT(*) FROM kg_nodes;") &&
 	test "$nodes" -gt 0
 '
 
 test_expect_success 'vibes-knowledge query finds symbols' '
-	cd vibes-kg-test &&
 	git vibes-knowledge query main 2>&1 | grep -q "main"
 '
 
 test_expect_success 'vibes-knowledge deps shows dependencies' '
-	cd vibes-kg-test &&
 	git vibes-knowledge deps src/main.c
 '
 

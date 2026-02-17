@@ -207,6 +207,19 @@ git-verify-commit                       ancillaryinterrogators
 git-verify-pack                         plumbinginterrogators
 git-verify-tag                          ancillaryinterrogators
 git-version                             ancillaryinterrogators
+git-vibes                               mainporcelain
+git-vibes-agents                        mainporcelain
+git-vibes-branch                        mainporcelain
+git-vibes-commit                        mainporcelain
+git-vibes-conflicts                     mainporcelain
+git-vibes-dashboard                     mainporcelain
+git-vibes-decompose                     mainporcelain
+git-vibes-init                          mainporcelain
+git-vibes-knowledge                     mainporcelain
+git-vibes-log                           mainporcelain
+git-vibes-merge                         mainporcelain
+git-vibes-session                       mainporcelain
+git-vibes-status                        mainporcelain           info
 git-whatchanged                         ancillaryinterrogators          complete
 git-worktree                            mainporcelain
 git-write-tree                          plumbingmanipulators

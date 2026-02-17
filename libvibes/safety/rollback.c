@@ -27,7 +27,7 @@ int vibes_rollback_last(struct vibes_db *db, struct repository *repo)
 	strvec_pushl(&cp.args, "reset", "--soft", "HEAD~1", NULL);
 	cp.git_cmd = 1;
 
-	if (run_command(&cp) < 0)
+	if (run_command(&cp))
 		return error("gitvibes: failed to rollback last commit");
 
 	printf("Rolled back last commit. Changes are now staged.\n");

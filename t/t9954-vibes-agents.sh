@@ -14,22 +14,18 @@ test_expect_success 'setup repo for agent tests' '
 '
 
 test_expect_success 'vibes-agents list shows empty initially' '
-	cd vibes-agent-test &&
 	git vibes-agents list 2>&1 | grep -q -i "no agent"
 '
 
 test_expect_success 'vibes-agents status shows system info' '
-	cd vibes-agent-test &&
 	git vibes-agents status 2>&1 | grep -q -i "status\|events\|locks"
 '
 
 test_expect_success 'vibes-agents logs shows empty initially' '
-	cd vibes-agent-test &&
 	git vibes-agents logs 2>&1 | grep -q -i "no events"
 '
 
 test_expect_success 'event bus inserts and queries work' '
-	cd vibes-agent-test &&
 	sqlite3 .git/vibes.db "
 		INSERT INTO events (id, type, agent_id, task_id, created_at)
 		VALUES (\"EVT001\", \"TASK_CLAIMED\", \"AGENT001\",
@@ -41,7 +37,6 @@ test_expect_success 'event bus inserts and queries work' '
 '
 
 test_expect_success 'file lock operations work' '
-	cd vibes-agent-test &&
 	sqlite3 .git/vibes.db "
 		INSERT INTO file_locks (file_path, agent_id, locked_at, expires_at)
 		VALUES (\"src/main.c\", \"AGENT001\",

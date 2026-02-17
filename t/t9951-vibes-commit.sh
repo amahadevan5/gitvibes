@@ -31,7 +31,6 @@ test_expect_success 'setup test repo with staged changes' '
 '
 
 test_expect_success 'vibes-commit --dry-run shows clusters' '
-	cd vibes-commit-test &&
 	echo "// updated" >>src/main.c &&
 	echo "// updated" >>src/util.c &&
 	echo "more docs" >>README.md &&
@@ -40,7 +39,6 @@ test_expect_success 'vibes-commit --dry-run shows clusters' '
 '
 
 test_expect_success 'vibes-commit --no-ai works without AI' '
-	cd vibes-commit-test &&
 	echo "// change 2" >>src/main.c &&
 	git add src/main.c &&
 	git vibes-commit --no-ai 2>&1
