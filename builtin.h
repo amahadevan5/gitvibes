@@ -283,4 +283,20 @@ int cmd_show_ref(int argc, const char **argv, const char *prefix, struct reposit
 int cmd_pack_refs(int argc, const char **argv, const char *prefix, struct repository *repo);
 int cmd_replace(int argc, const char **argv, const char *prefix, struct repository *repo);
 
+#ifdef VIBES_ENABLED
+int cmd_vibes(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_commit(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_decompose(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_init(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_status(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_log(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_branch(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_merge(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_agents(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_conflicts(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_session(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_knowledge(int argc, const char **argv, const char *prefix, struct repository *repo);
+int cmd_vibes_dashboard(int argc, const char **argv, const char *prefix, struct repository *repo);
+#endif
+
 #endif

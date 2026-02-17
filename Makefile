@@ -1500,6 +1500,108 @@ BUILTIN_OBJS += builtin/verify-tag.o
 BUILTIN_OBJS += builtin/worktree.o
 BUILTIN_OBJS += builtin/write-tree.o
 
+## gitvibes: AI-native git extensions
+ifdef VIBES_ENABLED
+BUILTIN_OBJS += builtin/vibes.o
+BUILTIN_OBJS += builtin/vibes-commit.o
+BUILTIN_OBJS += builtin/vibes-decompose.o
+BUILTIN_OBJS += builtin/vibes-init.o
+BUILTIN_OBJS += builtin/vibes-status.o
+BUILTIN_OBJS += builtin/vibes-log.o
+BUILTIN_OBJS += builtin/vibes-branch.o
+BUILTIN_OBJS += builtin/vibes-merge.o
+BUILTIN_OBJS += builtin/vibes-agents.o
+BUILTIN_OBJS += builtin/vibes-conflicts.o
+BUILTIN_OBJS += builtin/vibes-session.o
+BUILTIN_OBJS += builtin/vibes-knowledge.o
+BUILTIN_OBJS += builtin/vibes-dashboard.o
+
+# libvibes core library objects
+LIBVIBES_OBJS += libvibes/vibes-util.o
+LIBVIBES_OBJS += libvibes/storage/db.o
+LIBVIBES_OBJS += libvibes/storage/migrations.o
+LIBVIBES_OBJS += libvibes/storage/queries.o
+LIBVIBES_OBJS += libvibes/ai/ai.o
+LIBVIBES_OBJS += libvibes/ai/claude-backend.o
+LIBVIBES_OBJS += libvibes/ai/llama-backend.o
+LIBVIBES_OBJS += libvibes/ai/prompt-templates.o
+LIBVIBES_OBJS += libvibes/intent/intent.o
+LIBVIBES_OBJS += libvibes/intent/parser.o
+LIBVIBES_OBJS += libvibes/intent/decomposer.o
+LIBVIBES_OBJS += libvibes/intent/vibes-pipeline.o
+LIBVIBES_OBJS += libvibes/smart-commit/analyzer.o
+LIBVIBES_OBJS += libvibes/smart-commit/clusterer.o
+LIBVIBES_OBJS += libvibes/smart-commit/message-gen.o
+LIBVIBES_OBJS += libvibes/smart-commit/sc-decomposer.o
+LIBVIBES_OBJS += libvibes/knowledge/graph.o
+LIBVIBES_OBJS += libvibes/knowledge/indexer.o
+LIBVIBES_OBJS += libvibes/knowledge/ts-parser.o
+LIBVIBES_OBJS += libvibes/knowledge/impact.o
+LIBVIBES_OBJS += libvibes/knowledge/conflict-predict.o
+LIBVIBES_OBJS += libvibes/agents/orchestrator.o
+LIBVIBES_OBJS += libvibes/agents/agent-runner.o
+LIBVIBES_OBJS += libvibes/agents/agent-worker.o
+LIBVIBES_OBJS += libvibes/agents/event-bus.o
+LIBVIBES_OBJS += libvibes/agents/file-locks.o
+LIBVIBES_OBJS += libvibes/agents/task-queue.o
+LIBVIBES_OBJS += libvibes/agents/ipc.o
+LIBVIBES_OBJS += libvibes/merge/semantic-merge.o
+LIBVIBES_OBJS += libvibes/merge/conflict-classify.o
+LIBVIBES_OBJS += libvibes/merge/auto-resolve.o
+LIBVIBES_OBJS += libvibes/merge/candidate-gen.o
+LIBVIBES_OBJS += libvibes/branch/convention-detect.o
+LIBVIBES_OBJS += libvibes/branch/topology-plan.o
+LIBVIBES_OBJS += libvibes/branch/merge-order.o
+LIBVIBES_OBJS += libvibes/session/session.o
+LIBVIBES_OBJS += libvibes/session/context-snapshot.o
+LIBVIBES_OBJS += libvibes/session/context-restore.o
+LIBVIBES_OBJS += libvibes/safety/gates.o
+LIBVIBES_OBJS += libvibes/safety/rollback.o
+LIBVIBES_OBJS += libvibes/safety/snapshot.o
+LIBVIBES_OBJS += libvibes/tui/tui.o
+LIBVIBES_OBJS += libvibes/tui/dashboard-view.o
+LIBVIBES_OBJS += libvibes/tui/agent-panel.o
+LIBVIBES_OBJS += libvibes/tui/branch-view.o
+LIBVIBES_OBJS += libvibes/tui/conflict-view.o
+LIBVIBES_OBJS += libvibes/tui/intent-timeline.o
+LIBVIBES_OBJS += libvibes/tui/vibe-input.o
+LIBVIBES_OBJS += libvibes/tui/colors.o
+LIBVIBES_OBJS += libvibes/webui/server.o
+LIBVIBES_OBJS += libvibes/webui/api.o
+
+# SQLite amalgamation (compiled as third-party)
+LIBVIBES_OBJS += deps/sqlite3/sqlite3.o
+
+# Tree-sitter library
+LIBVIBES_OBJS += deps/tree-sitter/lib/src/lib.o
+
+# Tree-sitter language grammars
+LIBVIBES_OBJS += deps/tree-sitter-c/src/parser.o
+LIBVIBES_OBJS += deps/tree-sitter-python/src/parser.o
+LIBVIBES_OBJS += deps/tree-sitter-python/src/scanner.o
+LIBVIBES_OBJS += deps/tree-sitter-javascript/src/parser.o
+LIBVIBES_OBJS += deps/tree-sitter-javascript/src/scanner.o
+LIBVIBES_OBJS += deps/tree-sitter-go/src/parser.o
+LIBVIBES_OBJS += deps/tree-sitter-rust/src/parser.o
+LIBVIBES_OBJS += deps/tree-sitter-rust/src/scanner.o
+LIBVIBES_OBJS += deps/tree-sitter-java/src/parser.o
+
+# Vibes compile flags
+VIBES_CFLAGS = -DVIBES_ENABLED
+VIBES_CFLAGS += -Ilibvibes
+VIBES_CFLAGS += -Ideps/sqlite3
+VIBES_CFLAGS += -Ideps/tree-sitter/lib/include
+VIBES_CFLAGS += -Ideps/tree-sitter/lib/src
+
+BASIC_CFLAGS += $(VIBES_CFLAGS)
+LIB_OBJS += $(LIBVIBES_OBJS)
+
+# SQLite needs these on macOS
+EXTLIBS += -lcurl
+EXTLIBS += -lncurses
+endif
+## end gitvibes
+
 # THIRD_PARTY_SOURCES is a list of patterns compatible with the
 # $(filter) and $(filter-out) family of functions. They specify source
 # files which are taken from some third-party source where we want to be
@@ -1515,6 +1617,16 @@ THIRD_PARTY_SOURCES += sha1collisiondetection/%
 THIRD_PARTY_SOURCES += sha1dc/%
 THIRD_PARTY_SOURCES += $(UNIT_TEST_DIR)/clar/%
 THIRD_PARTY_SOURCES += $(UNIT_TEST_DIR)/clar/clar/%
+ifdef VIBES_ENABLED
+THIRD_PARTY_SOURCES += deps/sqlite3/%
+THIRD_PARTY_SOURCES += deps/tree-sitter/%
+THIRD_PARTY_SOURCES += deps/tree-sitter-c/%
+THIRD_PARTY_SOURCES += deps/tree-sitter-python/%
+THIRD_PARTY_SOURCES += deps/tree-sitter-javascript/%
+THIRD_PARTY_SOURCES += deps/tree-sitter-go/%
+THIRD_PARTY_SOURCES += deps/tree-sitter-rust/%
+THIRD_PARTY_SOURCES += deps/tree-sitter-java/%
+endif
 
 CLAR_TEST_SUITES += u-ctype
 CLAR_TEST_SUITES += u-dir

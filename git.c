@@ -675,6 +675,21 @@ static struct cmd_struct commands[] = {
 	{ "verify-pack", cmd_verify_pack },
 	{ "verify-tag", cmd_verify_tag, RUN_SETUP },
 	{ "version", cmd_version },
+#ifdef VIBES_ENABLED
+	{ "vibes", cmd_vibes, RUN_SETUP },
+	{ "vibes-agents", cmd_vibes_agents, RUN_SETUP },
+	{ "vibes-branch", cmd_vibes_branch, RUN_SETUP },
+	{ "vibes-commit", cmd_vibes_commit, RUN_SETUP },
+	{ "vibes-conflicts", cmd_vibes_conflicts, RUN_SETUP },
+	{ "vibes-dashboard", cmd_vibes_dashboard, RUN_SETUP },
+	{ "vibes-decompose", cmd_vibes_decompose, RUN_SETUP },
+	{ "vibes-init", cmd_vibes_init, RUN_SETUP_GENTLY },
+	{ "vibes-knowledge", cmd_vibes_knowledge, RUN_SETUP },
+	{ "vibes-log", cmd_vibes_log, RUN_SETUP },
+	{ "vibes-merge", cmd_vibes_merge, RUN_SETUP },
+	{ "vibes-session", cmd_vibes_session, RUN_SETUP },
+	{ "vibes-status", cmd_vibes_status, RUN_SETUP },
+#endif
 #ifndef WITH_BREAKING_CHANGES
 	{ "whatchanged", cmd_whatchanged, RUN_SETUP | DEPRECATED },
 #endif

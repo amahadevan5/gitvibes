@@ -2,3 +2,27 @@
 	path = sha1collisiondetection
 	url = https://github.com/cr-marcstevens/sha1collisiondetection.git
 	branch = master
+[submodule "deps/tree-sitter"]
+	path = deps/tree-sitter
+	url = https://github.com/tree-sitter/tree-sitter.git
+[submodule "deps/tree-sitter-c"]
+	path = deps/tree-sitter-c
+	url = https://github.com/tree-sitter/tree-sitter-c.git
+[submodule "deps/tree-sitter-python"]
+	path = deps/tree-sitter-python
+	url = https://github.com/tree-sitter/tree-sitter-python.git
+[submodule "deps/tree-sitter-javascript"]
+	path = deps/tree-sitter-javascript
+	url = https://github.com/tree-sitter/tree-sitter-javascript.git
+[submodule "deps/tree-sitter-go"]
+	path = deps/tree-sitter-go
+	url = https://github.com/tree-sitter/tree-sitter-go.git
+[submodule "deps/tree-sitter-rust"]
+	path = deps/tree-sitter-rust
+	url = https://github.com/tree-sitter/tree-sitter-rust.git
+[submodule "deps/tree-sitter-java"]
+	path = deps/tree-sitter-java
+	url = https://github.com/tree-sitter/tree-sitter-java.git
+[submodule "deps/llama.cpp"]
+	path = deps/llama.cpp
+	url = https://github.com/ggml-org/llama.cpp.git
