@@ -168,17 +168,20 @@ int vibes_ai_complete_api(const struct vibes_ai_config *cfg,
 		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
 		res = curl_easy_perform(curl);
-		curl_easy_cleanup(curl);
-		curl_slist_free_all(hdrs);
-		hdrs = NULL;
 
 		if (res != CURLE_OK) {
 			error("gitvibes: curl error: %s",
 			      curl_easy_strerror(res));
+			curl_easy_cleanup(curl);
+			curl_slist_free_all(hdrs);
+			hdrs = NULL;
 			goto out;
 		}
 
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+		curl_easy_cleanup(curl);
+		curl_slist_free_all(hdrs);
+		hdrs = NULL;
 
 		if (http_code == 429) {
 			sleep(1 << (attempt + 1));

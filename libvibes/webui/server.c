@@ -89,9 +89,10 @@ static void send_response(int fd, int status, const char *content_type,
 			"\r\n",
 			status, content_type, body_len);
 
-	write(fd, header, hlen);
+	if (write(fd, header, hlen) < 0)
+		return; /* client disconnected */
 	if (body && body_len > 0)
-		write(fd, body, body_len);
+		(void)write(fd, body, body_len);
 }
 
 static void serve_index(int fd)
@@ -150,6 +151,7 @@ int vibes_webui_run(struct vibes_webui *ui)
 {
 	signal(SIGINT, handle_signal);
 	signal(SIGTERM, handle_signal);
+	signal(SIGPIPE, SIG_IGN);
 
 	while (ui->running && g_running) {
 		struct sockaddr_in client_addr;

@@ -38,6 +38,35 @@ int vibes_agent_worker_run(struct vibes_db *db, const char *agent_id,
 #define HEARTBEAT_TIMEOUT_MS 60000  /* 60 seconds */
 #define POLL_INTERVAL_MS     1000   /* 1 second */
 
+/* Global shutdown flag, set by signal handler */
+static volatile sig_atomic_t g_shutdown;
+
+static void orchestrator_signal_handler(int sig)
+{
+	(void)sig;
+	g_shutdown = 1;
+}
+
+/*
+ * Kill all running agents and clean up. Called on SIGTERM/SIGINT.
+ */
+static void kill_all_agents(struct vibes_agent *agents, int nr_agents,
+			    struct vibes_db *db)
+{
+	int i;
+
+	for (i = 0; i < nr_agents; i++) {
+		if (agents[i].status != AGENT_WORKING)
+			continue;
+		vibes_agent_kill(agents[i].pid);
+		vibes_ipc_close(agents[i].socket_fd);
+		vibes_agent_cleanup(db, agents[i].id);
+		free(agents[i].task_id);
+		free(agents[i].worktree_path);
+		agents[i].status = AGENT_FAILED;
+	}
+}
+
 static int count_active_tasks(struct vibes_db *db, const char *intent_id)
 {
 	sqlite3_stmt *stmt;
@@ -183,6 +212,13 @@ static int monitor_agents(struct vibes_agent *agents, int nr_agents,
 		} else {
 			pfds[i].fd = -1;
 		}
+	}
+
+	/* Check for shutdown signal */
+	if (g_shutdown) {
+		kill_all_agents(agents, nr_agents, db);
+		free(pfds);
+		return 0;
 	}
 
 	/* Poll for IPC messages */
@@ -356,6 +392,15 @@ int vibes_orchestrator_run(struct vibes_db *db, struct repository *repo,
 			use_parallel = 0;
 	}
 
+	/* Ignore SIGPIPE so writing to dead agent sockets returns EPIPE
+	 * instead of killing the orchestrator process. */
+	signal(SIGPIPE, SIG_IGN);
+
+	/* Install SIGTERM/SIGINT handlers for graceful shutdown */
+	signal(SIGTERM, orchestrator_signal_handler);
+	signal(SIGINT, orchestrator_signal_handler);
+	g_shutdown = 0;
+
 	printf("\nOrchestrator starting for intent %.8s\n", intent_id);
 	printf("  Mode: %s\n", use_parallel ? "parallel (fork/exec)" :
 					       "sequential (in-process)");
@@ -371,6 +416,12 @@ int vibes_orchestrator_run(struct vibes_db *db, struct repository *repo,
 
 		if (wave_size == 0)
 			continue;
+
+		if (g_shutdown) {
+			printf("\nOrchestrator interrupted, shutting down.\n");
+			string_list_clear(&task_ids, 0);
+			break;
+		}
 
 		printf("Wave %d: %d task(s)\n", wave, wave_size);
 

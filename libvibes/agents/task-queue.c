@@ -87,12 +87,22 @@ char *vibes_queue_claim(struct vibes_db *db, const char *agent_id)
 	stmt = vibes_db_prepare(db,
 		"UPDATE tasks SET status = 'claimed', assigned_agent = ? "
 		"WHERE id = ? AND status = 'pending';");
-	if (stmt) {
-		sqlite3_bind_text(stmt, 1, agent_id, -1, SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, task_id, -1, SQLITE_STATIC);
-		sqlite3_step(stmt);
-		sqlite3_finalize(stmt);
+	if (!stmt) {
+		free(task_id);
+		vibes_db_rollback(db);
+		return NULL;
 	}
+
+	sqlite3_bind_text(stmt, 1, agent_id, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, task_id, -1, SQLITE_STATIC);
+
+	if (sqlite3_step(stmt) != SQLITE_DONE) {
+		sqlite3_finalize(stmt);
+		free(task_id);
+		vibes_db_rollback(db);
+		return NULL;
+	}
+	sqlite3_finalize(stmt);
 
 	vibes_db_commit(db);
 	return task_id;
