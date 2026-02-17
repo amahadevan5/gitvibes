@@ -4,6 +4,7 @@
 #include "strbuf.h"
 #include "run-command.h"
 #include "libvibes/intent/intent.h"
+#include "libvibes/json-parser.h"
 #include "libvibes/ai/ai.h"
 #include "libvibes/ai/prompt-templates.h"
 
@@ -15,49 +16,13 @@
  * Output: fills intent->type, parsed_goal, criteria, constraints
  */
 
-/*
- * Minimal JSON value extractor.
- * Finds "key":"value" and returns allocated copy of value.
- * Returns NULL if not found.
- */
-static char *json_extract_string(const char *json, const char *key)
-{
-	struct strbuf search = STRBUF_INIT;
-	const char *p, *start, *end;
-	char *result;
-
-	strbuf_addf(&search, "\"%s\"", key);
-	p = strstr(json, search.buf);
-	strbuf_release(&search);
-
-	if (!p)
-		return NULL;
-
-	/* Skip to the colon and value */
-	p += strlen(key) + 2;
-	while (*p && (*p == ':' || *p == ' ' || *p == '\t' || *p == '\n'))
-		p++;
-
-	if (*p != '"')
-		return NULL;
-	p++; /* skip opening quote */
-	start = p;
-
-	/* Find closing quote */
-	while (*p && !(*p == '"' && *(p - 1) != '\\'))
-		p++;
-	end = p;
-
-	result = xstrndup(start, end - start);
-	return result;
-}
-
 int vibes_parse_intent(struct vibes_intent *intent, struct repository *repo)
 {
 	struct vibes_ai_config ai_cfg;
 	struct strbuf prompt = STRBUF_INIT;
 	struct strbuf response = STRBUF_INIT;
-	char *val;
+	struct vibes_json root;
+	const char *val;
 	int ret;
 
 	if (!intent->raw_input)
@@ -74,16 +39,18 @@ int vibes_parse_intent(struct vibes_intent *intent, struct repository *repo)
 		goto cleanup;
 
 	/* Parse the JSON response */
-	val = json_extract_string(response.buf, "type");
-	if (val) {
-		intent->type = intent_type_from_str(val);
-		free(val);
-	}
+	if (vibes_json_parse_any(response.buf, &root) == 0) {
+		val = vibes_json_get_string(&root, "type");
+		if (val)
+			intent->type = intent_type_from_str(val);
 
-	val = json_extract_string(response.buf, "parsed_goal");
-	if (val) {
-		free(intent->parsed_goal);
-		intent->parsed_goal = val;
+		val = vibes_json_get_string(&root, "parsed_goal");
+		if (val) {
+			free(intent->parsed_goal);
+			intent->parsed_goal = xstrdup(val);
+		}
+
+		vibes_json_free(&root);
 	}
 
 	ret = 0;

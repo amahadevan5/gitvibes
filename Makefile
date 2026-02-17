@@ -1518,6 +1518,7 @@ BUILTIN_OBJS += builtin/vibes-dashboard.o
 
 # libvibes core library objects
 LIBVIBES_OBJS += libvibes/vibes-util.o
+LIBVIBES_OBJS += libvibes/json-parser.o
 LIBVIBES_OBJS += libvibes/storage/db.o
 LIBVIBES_OBJS += libvibes/storage/migrations.o
 LIBVIBES_OBJS += libvibes/storage/queries.o

@@ -5,6 +5,7 @@
 #include "strbuf.h"
 #include "string-list.h"
 #include "libvibes/knowledge/knowledge.h"
+#include "libvibes/json-parser.h"
 #include "libvibes/storage/db.h"
 
 /*
@@ -30,22 +31,10 @@ static int get_task_files(struct vibes_db *db, const char *task_id,
 	if (sqlite3_step(stmt) == SQLITE_ROW) {
 		const char *json = (const char *)sqlite3_column_text(stmt, 0);
 		if (json) {
-			/* Parse simple JSON array: ["file1","file2"] */
-			const char *p = json;
-			while (*p) {
-				if (*p == '"') {
-					const char *start = ++p;
-					while (*p && *p != '"')
-						p++;
-					if (p > start) {
-						char *file = xstrndup(start, p - start);
-						string_list_append(files, file);
-						free(file);
-					}
-					if (*p) p++;
-				} else {
-					p++;
-				}
+			struct vibes_json arr;
+			if (vibes_json_parse(json, &arr) == 0) {
+				vibes_json_array_to_strings(&arr, files);
+				vibes_json_free(&arr);
 			}
 		}
 	}
@@ -63,6 +52,7 @@ int vibes_predict_conflicts(struct vibes_db *db,
 	struct string_list files_b = STRING_LIST_INIT_DUP;
 	struct strbuf reason = STRBUF_INIT;
 	int shared_count = 0;
+	int i;
 
 	memset(result, 0, sizeof(*result));
 	string_list_init_dup(&result->shared_files);
@@ -74,7 +64,7 @@ int vibes_predict_conflicts(struct vibes_db *db,
 	string_list_sort(&files_a);
 	string_list_sort(&files_b);
 
-	for (int i = 0; i < files_a.nr; i++) {
+	for (i = 0; i < files_a.nr; i++) {
 		if (string_list_has_string(&files_b,
 					   files_a.items[i].string)) {
 			string_list_append(&result->shared_files,
@@ -88,17 +78,17 @@ int vibes_predict_conflicts(struct vibes_db *db,
 		struct string_list deps_a = STRING_LIST_INIT_DUP;
 		struct string_list deps_b = STRING_LIST_INIT_DUP;
 
-		for (int i = 0; i < files_a.nr; i++)
+		for (i = 0; i < files_a.nr; i++)
 			vibes_kg_get_dependents(db, files_a.items[i].string,
 						&deps_a);
-		for (int i = 0; i < files_b.nr; i++)
+		for (i = 0; i < files_b.nr; i++)
 			vibes_kg_get_dependents(db, files_b.items[i].string,
 						&deps_b);
 
 		string_list_sort(&deps_a);
 		string_list_sort(&deps_b);
 
-		for (int i = 0; i < deps_a.nr; i++) {
+		for (i = 0; i < deps_a.nr; i++) {
 			if (string_list_has_string(&deps_b,
 						   deps_a.items[i].string) &&
 			    !string_list_has_string(&result->shared_files,

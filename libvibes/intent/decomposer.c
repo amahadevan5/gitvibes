@@ -8,6 +8,7 @@
 #include "string-list.h"
 #include "run-command.h"
 #include "libvibes/intent/intent.h"
+#include "libvibes/json-parser.h"
 #include "libvibes/storage/db.h"
 #include "libvibes/ai/ai.h"
 #include "libvibes/ai/prompt-templates.h"
@@ -20,155 +21,6 @@
  * the JSON response into vibes_task structs and stores them
  * in the database.
  */
-
-/*
- * Minimal JSON array iterator for task objects.
- * Returns pointer to next '{' in a JSON array, or NULL.
- */
-static const char *json_next_object(const char *p)
-{
-	while (*p && *p != '{')
-		p++;
-	return *p ? p : NULL;
-}
-
-/*
- * Find the matching closing brace, handling nesting.
- */
-static const char *json_object_end(const char *start)
-{
-	const char *p = start;
-	int depth = 0;
-	int in_string = 0;
-
-	for (; *p; p++) {
-		if (*p == '"' && (p == start || *(p - 1) != '\\'))
-			in_string = !in_string;
-		if (in_string)
-			continue;
-		if (*p == '{')
-			depth++;
-		else if (*p == '}') {
-			depth--;
-			if (depth == 0)
-				return p;
-		}
-	}
-	return NULL;
-}
-
-/*
- * Extract a string value from a JSON object.
- * Looks for "key":"value" and returns an allocated copy.
- */
-static char *json_get_string(const char *obj, const char *end, const char *key)
-{
-	struct strbuf search = STRBUF_INIT;
-	const char *p, *start, *val_end;
-	char *result;
-
-	strbuf_addf(&search, "\"%s\"", key);
-	p = obj;
-	while (p < end) {
-		p = strstr(p, search.buf);
-		if (!p || p >= end) {
-			strbuf_release(&search);
-			return NULL;
-		}
-		/* Make sure this key is within our object bounds */
-		break;
-	}
-	strbuf_release(&search);
-
-	/* Skip past key and colon */
-	p += strlen(key) + 2;
-	while (p < end && (*p == ':' || *p == ' ' || *p == '\t' || *p == '\n'))
-		p++;
-
-	if (p >= end || *p != '"')
-		return NULL;
-	p++; /* skip opening quote */
-	start = p;
-
-	/* Find closing quote (handle escaped quotes) */
-	while (p < end && !(*p == '"' && *(p - 1) != '\\'))
-		p++;
-	val_end = p;
-
-	result = xstrndup(start, val_end - start);
-	return result;
-}
-
-/*
- * Extract an integer value from a JSON object.
- */
-static int json_get_int(const char *obj, const char *end, const char *key,
-			int default_val)
-{
-	struct strbuf search = STRBUF_INIT;
-	const char *p;
-
-	strbuf_addf(&search, "\"%s\"", key);
-	p = strstr(obj, search.buf);
-	strbuf_release(&search);
-
-	if (!p || p >= end)
-		return default_val;
-
-	p += strlen(key) + 2;
-	while (p < end && (*p == ':' || *p == ' ' || *p == '\t'))
-		p++;
-
-	return atoi(p);
-}
-
-/*
- * Extract a JSON array of strings for "dependencies" or "estimated_files".
- * Fills a string_list with the values.
- */
-static void json_get_string_array(const char *obj, const char *end,
-				  const char *key, struct string_list *list)
-{
-	struct strbuf search = STRBUF_INIT;
-	const char *p;
-
-	strbuf_addf(&search, "\"%s\"", key);
-	p = strstr(obj, search.buf);
-	strbuf_release(&search);
-
-	if (!p || p >= end)
-		return;
-
-	/* Find the opening bracket */
-	p += strlen(key) + 2;
-	while (p < end && *p != '[')
-		p++;
-	if (p >= end)
-		return;
-	p++; /* skip '[' */
-
-	/* Extract each string element */
-	while (p < end && *p != ']') {
-		while (p < end && (*p == ' ' || *p == ',' || *p == '\n' || *p == '\t'))
-			p++;
-		if (*p == '"') {
-			const char *start, *val_end;
-			p++; /* skip opening quote */
-			start = p;
-			while (p < end && !(*p == '"' && *(p - 1) != '\\'))
-				p++;
-			val_end = p;
-			if (p < end) {
-				char *val = xstrndup(start, val_end - start);
-				string_list_append(list, val);
-				free(val);
-				p++; /* skip closing quote */
-			}
-		} else {
-			p++;
-		}
-	}
-}
 
 /*
  * Build a simple file listing from the repository for context.
@@ -223,6 +75,83 @@ static void string_list_to_str(const struct string_list *list, struct strbuf *ou
 		strbuf_addstr(out, "(none)");
 }
 
+/*
+ * Parse the AI response (JSON array of task objects) into vibes_task
+ * structs and link them into the intent's task list.
+ */
+static int parse_tasks_from_json(const char *response,
+				 struct vibes_intent *intent,
+				 struct vibes_db *db)
+{
+	struct vibes_json root;
+	struct vibes_task *tail = NULL;
+	int nr_tasks = 0;
+	int i;
+
+	if (vibes_json_parse_any(response, &root) < 0)
+		return error("gitvibes: AI response contains no valid JSON");
+
+	if (root.type != JSON_ARRAY) {
+		vibes_json_free(&root);
+		return error("gitvibes: AI response is not a JSON array");
+	}
+
+	for (i = 0; i < root.nr_elements; i++) {
+		const struct vibes_json *obj = &root.elements[i];
+		const struct vibes_json *arr;
+		struct vibes_task *task;
+		const char *title;
+		const char *desc;
+
+		if (obj->type != JSON_OBJECT)
+			continue;
+
+		task = xcalloc(1, sizeof(*task));
+		vibes_task_init(task);
+
+		vibes_ulid_generate(task->id);
+		task->intent_id = xstrdup(intent->id);
+
+		title = vibes_json_get_string(obj, "title");
+		task->title = title ? xstrdup(title) : NULL;
+
+		desc = vibes_json_get_string(obj, "description");
+		task->description = desc ? xstrdup(desc) : NULL;
+
+		task->wave_number = vibes_json_get_int(obj, "wave", 0);
+
+		arr = vibes_json_get_array(obj, "dependencies");
+		if (arr)
+			vibes_json_array_to_strings(arr, &task->dependencies);
+
+		arr = vibes_json_get_array(obj, "estimated_files");
+		if (arr)
+			vibes_json_array_to_strings(arr, &task->est_files);
+
+		task->status = TASK_PENDING;
+
+		/* Insert into database */
+		if (db) {
+			vibes_db_insert_task(db, task->id, task->intent_id,
+					    task->title ? task->title : "untitled",
+					    task->description,
+					    task->wave_number);
+		}
+
+		/* Append to linked list */
+		if (!intent->tasks)
+			intent->tasks = task;
+		else
+			tail->next = task;
+		tail = task;
+		nr_tasks++;
+	}
+
+	vibes_json_free(&root);
+	intent->nr_tasks = nr_tasks;
+	return 0;
+}
+
 int vibes_decompose_intent(struct vibes_intent *intent,
 			   struct vibes_db *db,
 			   struct repository *repo)
@@ -233,9 +162,6 @@ int vibes_decompose_intent(struct vibes_intent *intent,
 	struct strbuf files = STRBUF_INIT;
 	struct strbuf criteria_str = STRBUF_INIT;
 	struct strbuf constraints_str = STRBUF_INIT;
-	const char *p;
-	struct vibes_task *tail = NULL;
-	int nr_tasks = 0;
 	int ret;
 
 	if (!intent->parsed_goal && !intent->raw_input)
@@ -262,65 +188,10 @@ int vibes_decompose_intent(struct vibes_intent *intent,
 	if (ret < 0)
 		goto cleanup;
 
-	/* Parse the JSON array response into tasks */
-	p = response.buf;
-
-	/* Find the start of the JSON array */
-	while (*p && *p != '[')
-		p++;
-	if (!*p) {
-		ret = error("gitvibes: AI response contains no task array");
+	/* Parse JSON response into task structs */
+	ret = parse_tasks_from_json(response.buf, intent, db);
+	if (ret < 0)
 		goto cleanup;
-	}
-
-	/* Parse each task object */
-	while ((p = json_next_object(p)) != NULL) {
-		const char *obj_end = json_object_end(p);
-		struct vibes_task *task;
-
-		if (!obj_end)
-			break;
-
-		task = xcalloc(1, sizeof(*task));
-		vibes_task_init(task);
-
-		/* Generate task ID */
-		vibes_ulid_generate(task->id);
-		task->intent_id = xstrdup(intent->id);
-
-		/* Extract fields from JSON */
-		task->title = json_get_string(p, obj_end, "title");
-		task->description = json_get_string(p, obj_end, "description");
-		task->wave_number = json_get_int(p, obj_end, "wave", 0);
-
-		json_get_string_array(p, obj_end, "dependencies",
-				      &task->dependencies);
-		json_get_string_array(p, obj_end, "estimated_files",
-				      &task->est_files);
-
-		task->status = TASK_PENDING;
-
-		/* Insert into database */
-		if (db) {
-			vibes_db_insert_task(db, task->id, task->intent_id,
-					    task->title ? task->title : "untitled",
-					    task->description,
-					    task->wave_number);
-		}
-
-		/* Append to linked list */
-		if (!intent->tasks) {
-			intent->tasks = task;
-		} else {
-			tail->next = task;
-		}
-		tail = task;
-		nr_tasks++;
-
-		p = obj_end + 1;
-	}
-
-	intent->nr_tasks = nr_tasks;
 
 	/* Update intent status to DECOMPOSED */
 	intent->status = INTENT_DECOMPOSED;

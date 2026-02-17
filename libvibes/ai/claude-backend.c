@@ -3,6 +3,7 @@
 
 #include <curl/curl.h>
 #include "libvibes/ai/ai.h"
+#include "libvibes/json-parser.h"
 
 /*
  * Claude API backend for gitvibes.
@@ -45,61 +46,72 @@ static void json_escape(struct strbuf *out, const char *s)
 }
 
 /*
- * Extract the first "text" value from a Claude API JSON response.
- * Minimal hand-written parser — finds "text":"..." in the response.
+ * Extract text content from a Claude API JSON response.
+ *
+ * Claude API returns:
+ *   {"content":[{"type":"text","text":"..."}], ...}
+ *
+ * We walk the parsed JSON tree to find content[0].text.
  */
-static int extract_text(const char *json, struct strbuf *out)
+static int extract_text(const char *json_str, struct strbuf *out)
 {
-	const char *p, *key = "\"text\":\"";
+	struct vibes_json root;
+	const struct vibes_json *content;
+	const char *text;
 
-	p = strstr(json, key);
-	if (!p)
+	if (vibes_json_parse(json_str, &root) < 0)
 		return -1;
-	p += strlen(key);
 
-	while (*p && *p != '"') {
-		if (*p == '\\' && *(p + 1)) {
-			p++;
-			switch (*p) {
-			case '"':  strbuf_addch(out, '"'); break;
-			case '\\': strbuf_addch(out, '\\'); break;
-			case 'n':  strbuf_addch(out, '\n'); break;
-			case 'r':  strbuf_addch(out, '\r'); break;
-			case 't':  strbuf_addch(out, '\t'); break;
-			case '/':  strbuf_addch(out, '/'); break;
-			default:   strbuf_addch(out, *p);
-			}
-		} else {
-			strbuf_addch(out, *p);
-		}
-		p++;
+	content = vibes_json_get_array(&root, "content");
+	if (!content || content->nr_elements == 0) {
+		vibes_json_free(&root);
+		return -1;
 	}
+
+	text = vibes_json_get_string(&content->elements[0], "text");
+	if (!text) {
+		vibes_json_free(&root);
+		return -1;
+	}
+
+	strbuf_addstr(out, text);
+	vibes_json_free(&root);
 	return 0;
 }
 
 /*
- * Extract "message" field from an error response.
+ * Extract error message from a Claude API error response.
+ *
+ * Error format: {"error":{"type":"...","message":"..."}}
  */
-static void extract_error(const char *json, struct strbuf *out)
+static void extract_error(const char *json_str, struct strbuf *out)
 {
-	const char *p, *key = "\"message\":\"";
+	struct vibes_json root;
+	const struct vibes_json *err_obj;
+	const char *msg;
 
-	p = strstr(json, key);
-	if (!p) {
+	if (vibes_json_parse(json_str, &root) < 0) {
 		strbuf_addstr(out, "unknown API error");
 		return;
 	}
-	p += strlen(key);
 
-	while (*p && *p != '"') {
-		if (*p == '\\' && *(p + 1)) {
-			p++;
-			strbuf_addch(out, *p);
-		} else {
-			strbuf_addch(out, *p);
-		}
-		p++;
+	err_obj = vibes_json_get_object(&root, "error");
+	if (err_obj) {
+		msg = vibes_json_get_string(err_obj, "message");
+		if (msg)
+			strbuf_addstr(out, msg);
+		else
+			strbuf_addstr(out, "unknown API error");
+	} else {
+		/* Fallback: try top-level "message" */
+		msg = vibes_json_get_string(&root, "message");
+		if (msg)
+			strbuf_addstr(out, msg);
+		else
+			strbuf_addstr(out, "unknown API error");
 	}
+
+	vibes_json_free(&root);
 }
 
 int vibes_ai_complete_api(const struct vibes_ai_config *cfg,
