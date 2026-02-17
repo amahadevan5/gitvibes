@@ -1,0 +1,49 @@
+git-vibes-commit(1)
+===================
+
+NAME
+----
+git-vibes-commit - Create smart atomic commits from staged changes
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-commit [--dry-run] [--no-ai] [--all]
+
+DESCRIPTION
+-----------
+
+Analyze the current diff, cluster related changes into logical groups,
+and create one or more atomic commits with AI-generated messages.
+
+The command examines staged changes (or all changes with `--all`),
+uses heuristics and AST analysis to identify independent change
+clusters, then invokes the configured AI backend to produce a
+conventional commit message for each cluster.
+
+OPTIONS
+-------
+
+--dry-run::
+	Show what commits would be created without actually
+	committing anything.  Prints the proposed clusters
+	and generated messages to standard output.
+
+--no-ai::
+	Skip AI message generation and use a deterministic
+	summary based on file paths and diff statistics.
+
+--all::
+	Automatically stage all modified and deleted files
+	before analyzing, equivalent to `git add -u` followed
+	by the commit analysis.
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-status[1],
+linkgit:git-commit[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

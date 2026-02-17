@@ -30,9 +30,11 @@ make VIBES_ENABLED=1 NO_GETTEXT=1 -j$(sysctl -n hw.ncpu)
   - `safety/` - Validation gates, rollback, snapshots
   - `storage/` - SQLite layer (db, schema, migrations, queries)
   - `tui/` - ncurses terminal UI
-  - `webui/` - Embedded HTTP server + REST API
+  - `webui/` - Embedded HTTP server + REST API + WebSocket
 - `deps/` - Dependencies (sqlite3, tree-sitter, tree-sitter grammars)
-- `t/t995[0-8]-vibes-*.sh` - gitvibes test suite
+- `t/t995[0-8]-vibes-*.sh` - gitvibes test suite (9 suites)
+- `t/t9960-vibes-migrations.sh` - schema migration tests
+- `Documentation/git-vibes*.adoc` - man pages
 
 ## Conventions
 
@@ -43,7 +45,9 @@ make VIBES_ENABLED=1 NO_GETTEXT=1 -j$(sysctl -n hw.ncpu)
 - Database: SQLite3 with WAL mode at `.git/vibes.db`
 - IDs: ULID format (26 chars, base32, time-ordered)
 - C style: tabs for indentation, K&R braces, git coding style
-- No external JSON library - hand-written minimal JSON parsing
+- JSON parsing: recursive-descent parser in libvibes/json-parser.c
+- Schema version: 2 (auto-migrated on DB open)
+- WebSocket: RFC 6455 for real-time dashboard updates
 
 ## Testing
 
@@ -51,8 +55,8 @@ make VIBES_ENABLED=1 NO_GETTEXT=1 -j$(sysctl -n hw.ncpu)
 # Run gitvibes tests
 cd t && sh t9950-vibes-init.sh -v
 
-# Run all vibes tests
-for t in t/t995[0-8]-vibes-*.sh; do sh "$t" -v; done
+# Run all vibes tests (from t/ directory)
+cd t && for t in t995[0-8]-vibes-*.sh t9960-vibes-*.sh; do sh "$t" -v; done
 ```
 
 ## Dependencies

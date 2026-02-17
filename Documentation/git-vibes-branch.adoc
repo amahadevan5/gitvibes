@@ -1,0 +1,53 @@
+git-vibes-branch(1)
+===================
+
+NAME
+----
+git-vibes-branch - Branch strategy detection
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-branch detect
+
+DESCRIPTION
+-----------
+
+Analyze the repository's branch topology and naming conventions
+to detect the branching strategy in use (e.g., git-flow, GitHub
+flow, trunk-based development).
+
+The detection examines branch names, merge patterns, and ref
+history to classify the strategy.  Results are stored in
+`.git/vibes.db` and used by other vibes commands to create
+branches that follow the project's conventions.
+
+SUBCOMMANDS
+-----------
+
+detect::
+	Scan all local and remote branches, analyze naming
+	patterns and merge history, and report the detected
+	strategy along with a confidence score.
+
+EXAMPLES
+--------
+
+Detect the branch strategy::
++
+-----------
+$ git vibes-branch detect
+Detected: github-flow (confidence: 92%)
+  main branch: main
+  feature prefix: feature/
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-merge[1],
+linkgit:git-branch[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

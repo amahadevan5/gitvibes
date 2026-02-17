@@ -1,0 +1,61 @@
+git-vibes-dashboard(1)
+======================
+
+NAME
+----
+git-vibes-dashboard - Launch TUI or web dashboard
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-dashboard [--web]
+
+DESCRIPTION
+-----------
+
+Launch an interactive dashboard showing intents, tasks, agent
+activity, and knowledge graph status.
+
+By default, a terminal UI (TUI) is displayed using ncurses with
+panels for intent progress, task queues, agent status, and recent
+events.
+
+With `--web`, an embedded HTTP server is started that serves a
+browser-based dashboard with the same information plus interactive
+graphs.
+
+OPTIONS
+-------
+
+--web::
+	Start the web dashboard instead of the TUI.  Launches
+	an HTTP server on port 3737 and opens the default
+	browser.  The server runs in the foreground until
+	interrupted with Ctrl-C.
+
+EXAMPLES
+--------
+
+Launch the terminal dashboard::
++
+-----------
+$ git vibes-dashboard
+-----------
+
+Launch the web dashboard::
++
+-----------
+$ git vibes-dashboard --web
+Listening on http://localhost:3737
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-status[1],
+linkgit:git-vibes-agents[1],
+linkgit:git-vibes-log[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

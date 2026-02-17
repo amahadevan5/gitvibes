@@ -1,0 +1,46 @@
+git-vibes-status(1)
+===================
+
+NAME
+----
+git-vibes-status - Show active intents, tasks, and agent status
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-status
+
+DESCRIPTION
+-----------
+
+Display a summary of the current gitvibes state, similar in spirit
+to `git status` but focused on the vibes system.
+
+The output includes:
+
+* Active intents and their progress
+* Pending, running, and completed tasks
+* Agent processes and their current assignments
+* The current session, if any
+
+This command reads from `.git/vibes.db` and does not modify any state.
+
+EXAMPLES
+--------
+
+Show current vibes status::
++
+-----------
+$ git vibes-status
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-agents[1],
+linkgit:git-vibes-session[1],
+linkgit:git-vibes-log[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

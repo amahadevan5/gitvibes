@@ -1,0 +1,58 @@
+git-vibes-merge(1)
+==================
+
+NAME
+----
+git-vibes-merge - Semantic merge operations
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-merge [--rollback]
+
+DESCRIPTION
+-----------
+
+Perform semantic merges of task branches by understanding code
+structure rather than relying solely on textual diff.  The merge
+uses AST-level analysis from the knowledge graph to classify
+conflicts (e.g., formatting-only, rename, semantic) and attempt
+automatic resolution where safe.
+
+Before applying any changes, a safety snapshot is taken so the
+operation can be rolled back.
+
+OPTIONS
+-------
+
+--rollback::
+	Undo the last semantic merge operation by restoring
+	the safety snapshot taken before the merge was applied.
+	This resets the working tree and index to their
+	pre-merge state.
+
+EXAMPLES
+--------
+
+Merge the current task branch semantically::
++
+-----------
+$ git vibes-merge
+-----------
+
+Roll back a bad merge::
++
+-----------
+$ git vibes-merge --rollback
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-conflicts[1],
+linkgit:git-vibes-branch[1],
+linkgit:git-merge[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

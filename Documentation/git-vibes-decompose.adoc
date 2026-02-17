@@ -1,0 +1,45 @@
+git-vibes-decompose(1)
+======================
+
+NAME
+----
+git-vibes-decompose - Task decomposition and agent worker mode
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-decompose
+
+DESCRIPTION
+-----------
+
+Internal command used by the gitvibes orchestration system.  It is
+not intended to be invoked directly by users.
+
+When called by the orchestrator, this command operates in one of
+two modes:
+
+Decomposition mode::
+	Takes an intent and breaks it into a set of concrete,
+	executable tasks using AI analysis and the knowledge
+	graph.  Each task includes a description, estimated
+	file scope, and dependency ordering.
+
+Worker mode::
+	Executes a single assigned task as an agent subprocess.
+	The agent acquires file locks, performs the work through
+	the configured AI backend, and reports results back via
+	the event bus.
+
+This command is spawned by `git vibes --execute` and by the
+agent orchestrator.  It communicates with the parent process
+through the event bus stored in `.git/vibes.db`.
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-agents[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

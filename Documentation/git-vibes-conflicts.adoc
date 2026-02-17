@@ -1,0 +1,60 @@
+git-vibes-conflicts(1)
+======================
+
+NAME
+----
+git-vibes-conflicts - Predict conflicts between tasks
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-conflicts
+
+DESCRIPTION
+-----------
+
+Analyze active tasks and their anticipated file modifications to
+predict merge conflicts before they occur.  The command uses the
+knowledge graph and task decomposition data to estimate overlap
+probability between concurrent tasks.
+
+For each pair of tasks with overlapping file sets, the output
+shows the affected files, an overlap probability score, and
+recommendations for sequencing or splitting work to avoid
+conflicts.
+
+OUTPUT
+------
+
+The output lists task pairs sorted by conflict probability
+(highest first).  Each entry includes:
+
+* The two task IDs and their descriptions
+* Files that both tasks are expected to modify
+* Overlap probability as a percentage
+* A recommendation (e.g., serialize, split, or safe to parallel)
+
+EXAMPLES
+--------
+
+Check for potential conflicts::
++
+-----------
+$ git vibes-conflicts
+CONFLICT RISK: 78%
+  task/01HXQ3... "add auth middleware"
+  task/01HXQ4... "refactor request handler"
+  overlap: src/http/handler.c, src/http/middleware.c
+  recommendation: serialize these tasks
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-agents[1],
+linkgit:git-vibes-merge[1],
+linkgit:git-vibes-knowledge[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

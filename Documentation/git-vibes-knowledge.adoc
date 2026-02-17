@@ -1,0 +1,68 @@
+git-vibes-knowledge(1)
+======================
+
+NAME
+----
+git-vibes-knowledge - Knowledge graph operations
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-knowledge index
+git vibes-knowledge stats
+git vibes-knowledge query <name>
+git vibes-knowledge deps <file>
+
+DESCRIPTION
+-----------
+
+Build and query the repository knowledge graph.  The graph is
+constructed from tree-sitter AST parsing of source files and
+stores symbol definitions, references, and dependency edges
+in `.git/vibes.db`.
+
+SUBCOMMANDS
+-----------
+
+index::
+	Parse all recognized source files using tree-sitter
+	grammars and populate the knowledge graph with symbols,
+	call edges, and file-level dependencies.
+
+stats::
+	Print summary counts of indexed files, symbols,
+	references, and dependency edges.
+
+query <name>::
+	Search for symbols matching '<name>'.  Returns
+	definitions and references with file paths and
+	line numbers.
+
+deps <file>::
+	Show the dependency graph for '<file>', including
+	both direct imports and transitive dependencies.
+
+EXAMPLES
+--------
+
+Build the knowledge graph::
++
+-----------
+$ git vibes-knowledge index
+-----------
+
+Find all symbols named "parse_intent"::
++
+-----------
+$ git vibes-knowledge query parse_intent
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-conflicts[1],
+linkgit:git-vibes-merge[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

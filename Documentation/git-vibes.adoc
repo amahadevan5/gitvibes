@@ -1,0 +1,91 @@
+git-vibes(1)
+============
+
+NAME
+----
+git-vibes - AI-native development from natural language
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes [--list] [--show <id>] [--abandon <id>] [--execute] [<intent>]
+
+DESCRIPTION
+-----------
+
+`git vibes` is the main entry point for AI-native development in
+gitvibes.  Given a natural language description of what you want to
+build, it parses the intent, decomposes it into tasks, and optionally
+executes them via multi-agent orchestration.
+
+Without arguments, shows usage information.
+
+OPTIONS
+-------
+
+<intent>::
+	A natural language description of the development intent,
+	e.g. `git vibes "add JWT authentication"`.
+
+--list::
+	List all recorded intents with their status.
+
+--show <id>::
+	Show details of a specific intent by its ULID.
+
+--abandon <id>::
+	Mark an intent as abandoned.
+
+--execute::
+	After decomposing the intent into tasks, automatically
+	execute them using the multi-agent orchestrator.
+	Without this flag, tasks are created but not executed.
+
+CONFIGURATION
+-------------
+
+vibes.backend::
+	AI backend to use.  One of `cli` (Claude Code subprocess),
+	`api` (Claude API via HTTP), or `hybrid` (route by task type).
+	Default: `hybrid`.
+
+vibes.claude-api-key::
+	API key for the Claude API backend.
+
+vibes.max-agents::
+	Maximum number of parallel agent processes.
+	Set to `0` for sequential in-process execution.
+	Default: `4`.
+
+EXAMPLES
+--------
+
+Create an intent without executing::
++
+-----------
+$ git vibes "add user login page with OAuth"
+-----------
+
+Create and execute an intent::
++
+-----------
+$ git vibes "fix the checkout redirect bug" --execute
+-----------
+
+List all intents::
++
+-----------
+$ git vibes --list
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes-init[1],
+linkgit:git-vibes-commit[1],
+linkgit:git-vibes-status[1],
+linkgit:git-vibes-agents[1],
+linkgit:git-vibes-dashboard[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

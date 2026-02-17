@@ -1,0 +1,50 @@
+git-vibes-log(1)
+================
+
+NAME
+----
+git-vibes-log - Show intent and task history with timeline
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-log
+
+DESCRIPTION
+-----------
+
+Display a chronological history of intents and their associated
+tasks.  Each entry shows the timestamp, intent description,
+decomposed tasks, and their final status (completed, failed,
+or abandoned).
+
+The output is ordered newest-first, similar to `git log`.
+Intent entries include the ULID, creation time, natural language
+description, and a summary of task outcomes.
+
+EXAMPLES
+--------
+
+Show the vibes history::
++
+-----------
+$ git vibes-log
+01HXQ3K9... 2024-06-15 14:23  "add JWT authentication"
+  [done] implement token generation
+  [done] add middleware validation
+  [done] write auth tests
+
+01HXQ2AB... 2024-06-15 10:05  "fix checkout redirect"
+  [done] trace redirect logic
+  [done] patch URL builder
+-----------
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-status[1],
+linkgit:git-log[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

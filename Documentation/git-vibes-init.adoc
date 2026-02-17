@@ -1,0 +1,40 @@
+git-vibes-init(1)
+=================
+
+NAME
+----
+git-vibes-init - Initialize gitvibes in a repository
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-init [--force]
+
+DESCRIPTION
+-----------
+
+Initialize the gitvibes system in the current repository.  This creates
+the SQLite database at `.git/vibes.db`, runs schema migrations, and
+sets default configuration values under the `vibes.*` namespace.
+
+If gitvibes is already initialized, the command will refuse to
+re-initialize unless `--force` is given.
+
+OPTIONS
+-------
+
+--force::
+	Re-initialize even if `.git/vibes.db` already exists.
+	Existing data is preserved; only missing schema migrations
+	are applied and default configuration values are set for
+	any keys not already present.
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-status[1],
+linkgit:git-vibes-session[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

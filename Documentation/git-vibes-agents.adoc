@@ -1,0 +1,48 @@
+git-vibes-agents(1)
+===================
+
+NAME
+----
+git-vibes-agents - Manage and monitor agents
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-agents list
+git vibes-agents status
+git vibes-agents logs [<agent-id>]
+
+DESCRIPTION
+-----------
+
+Inspect and manage the multi-agent orchestration system.  Agents are
+worker processes that execute decomposed tasks in parallel, coordinated
+through an event bus and file-level locking.
+
+SUBCOMMANDS
+-----------
+
+list::
+	List all known agents with their IDs, assigned tasks,
+	and current state (idle, running, or exited).
+
+status::
+	Show a live summary of running agents, including
+	event bus statistics, file lock ownership, and
+	task progress.
+
+logs [<agent-id>]::
+	Print the event history for all agents or a specific
+	agent identified by its ULID.  Events include task
+	assignments, file lock acquisitions, completions,
+	and errors.
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-status[1],
+linkgit:git-vibes-decompose[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite

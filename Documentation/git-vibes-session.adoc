@@ -1,0 +1,54 @@
+git-vibes-session(1)
+====================
+
+NAME
+----
+git-vibes-session - Session management
+
+SYNOPSIS
+--------
+[synopsis]
+git vibes-session start <name>
+git vibes-session list
+git vibes-session end
+git vibes-session resume [<name>]
+
+DESCRIPTION
+-----------
+
+Manage development sessions that preserve context across
+multiple interactions with the vibes system.  A session
+captures a snapshot of active intents, tasks, agent state,
+and conversation history so work can be suspended and
+resumed later.
+
+SUBCOMMANDS
+-----------
+
+start <name>::
+	Begin a new named session.  Any existing active
+	session is ended automatically before the new
+	one starts.
+
+list::
+	List all sessions with their names, timestamps,
+	and status (active, ended).
+
+end::
+	End the current active session and save a context
+	snapshot.
+
+resume [<name>]::
+	Resume a previously ended session by name.  If
+	'<name>' is omitted, resume the most recently
+	ended session.  Restores the saved context snapshot.
+
+SEE ALSO
+--------
+linkgit:git-vibes[1],
+linkgit:git-vibes-status[1],
+linkgit:git-vibes-init[1]
+
+GIT
+---
+Part of the linkgit:git[1] suite
