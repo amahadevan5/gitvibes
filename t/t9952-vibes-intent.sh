@@ -47,4 +47,9 @@ test_expect_success 'git vibes --abandon marks intent abandoned' '
 	test "$status" = "abandoned"
 '
 
+test_expect_success 'git vibes -h shows --execute option' '
+	test_expect_code 129 git vibes -h >help.out 2>&1 &&
+	grep -q "execute" help.out
+'
+
 test_done

@@ -11,7 +11,7 @@
 #include "libvibes/storage/db.h"
 
 static const char * const vibes_usage[] = {
-	"git vibes \"<natural language request>\"",
+	"git vibes \"<natural language request>\" [--execute]",
 	"git vibes --list [--status <status>]",
 	"git vibes --show <id>",
 	"git vibes --abandon <id>",
@@ -177,6 +177,7 @@ int cmd_vibes(int argc, const char **argv, const char *prefix,
 	      struct repository *repo)
 {
 	int list = 0;
+	int execute = 0;
 	const char *show_id = NULL;
 	const char *abandon_id = NULL;
 	const char *status_filter = NULL;
@@ -186,6 +187,8 @@ int cmd_vibes(int argc, const char **argv, const char *prefix,
 		OPT_STRING(0, "abandon", &abandon_id, "id", "abandon an intent"),
 		OPT_STRING(0, "status", &status_filter, "status",
 			   "filter by status (with --list)"),
+		OPT_BOOL(0, "execute", &execute,
+			 "execute tasks after decomposition"),
 		OPT_END()
 	};
 	struct vibes_db db;
@@ -220,7 +223,10 @@ int cmd_vibes(int argc, const char **argv, const char *prefix,
 			strbuf_addstr(&input, argv[i]);
 		}
 
-		ret = vibes_pipeline_run(input.buf, &db, repo);
+		if (execute)
+			ret = vibes_pipeline_execute(input.buf, &db, repo);
+		else
+			ret = vibes_pipeline_run(input.buf, &db, repo);
 		strbuf_release(&input);
 	} else {
 		usage_with_options(vibes_usage, options);

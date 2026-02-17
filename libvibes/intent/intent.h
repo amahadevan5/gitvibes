@@ -113,5 +113,10 @@ int vibes_pipeline_run(const char *raw_input,
 		       struct vibes_db *db,
 		       struct repository *repo);
 
+/* Full pipeline with execution: parse → decompose → orchestrate → merge */
+int vibes_pipeline_execute(const char *raw_input,
+			   struct vibes_db *db,
+			   struct repository *repo);
+
 #endif /* VIBES_ENABLED */
 #endif /* LIBVIBES_INTENT_INTENT_H */
