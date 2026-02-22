@@ -63,6 +63,9 @@ int vibes_generate_candidates(struct vibes_db *db,
 			      int max_candidates);
 void vibes_candidate_free(struct resolution_candidate *candidate);
 
+/* Read a conflict stage (1=base, 2=ours, 3=theirs) via git show */
+int vibes_read_conflict_stage(struct strbuf *out, int stage, const char *path);
+
 /* Utility */
 void vibes_conflict_init(struct vibes_conflict *c);
 void vibes_conflict_free(struct vibes_conflict *c);

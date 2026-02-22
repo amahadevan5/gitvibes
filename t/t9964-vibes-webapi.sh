@@ -4,6 +4,8 @@ test_description='gitvibes: web API smoke tests'
 
 . ./test-lib.sh
 
+WEBUI_PORT=3799
+
 test_expect_success 'setup repo for web API tests' '
 	git init vibes-webapi-test &&
 	cd vibes-webapi-test &&
@@ -30,11 +32,6 @@ test_expect_success 'insert test data for API queries' '
 	EOSQL
 '
 
-test_expect_success 'vibes-dashboard --web returns not-yet-available' '
-	test_expect_code 1 git vibes-dashboard --web >web.out 2>&1 &&
-	grep -q "not yet available" web.out
-'
-
 test_expect_success 'vibes-dashboard -h shows web option' '
 	test_expect_code 129 git vibes-dashboard -h >help.out 2>&1 &&
 	grep -q "web" help.out
@@ -44,12 +41,37 @@ test_expect_success 'vibes-dashboard -h shows port option' '
 	grep -q "port" help.out
 '
 
-test_expect_success 'vibes-dashboard --web --port accepts custom port' '
-	test_expect_code 1 git vibes-dashboard --web --port 4242 >port.out 2>&1 &&
-	grep -q "not yet available" port.out
+test_expect_success 'web server starts and serves index HTML' '
+	{
+		git vibes-dashboard --web --port $WEBUI_PORT &
+	} &&
+	test_when_finished "kill $! 2>/dev/null || :" &&
+	sleep 1 &&
+	curl -s http://localhost:$WEBUI_PORT/ >index.out &&
+	grep -q "gitvibes" index.out
 '
 
-test_expect_success 'database has test data for future API' '
+test_expect_success 'web API serves /api/intents as JSON' '
+	{
+		git vibes-dashboard --web --port $WEBUI_PORT &
+	} &&
+	test_when_finished "kill $! 2>/dev/null || :" &&
+	sleep 1 &&
+	curl -s http://localhost:$WEBUI_PORT/api/intents >intents.out &&
+	grep -q "INT_WEB_001" intents.out
+'
+
+test_expect_success 'web API serves /api/tasks as JSON' '
+	{
+		git vibes-dashboard --web --port $WEBUI_PORT &
+	} &&
+	test_when_finished "kill $! 2>/dev/null || :" &&
+	sleep 1 &&
+	curl -s http://localhost:$WEBUI_PORT/api/tasks >tasks.out &&
+	grep -q "TASK_WEB_001" tasks.out
+'
+
+test_expect_success 'database has test data for API' '
 	intent_count=$(sqlite3 .git/vibes.db \
 		"SELECT COUNT(*) FROM intents;") &&
 	test "$intent_count" -ge 1 &&

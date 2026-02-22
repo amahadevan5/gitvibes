@@ -13,8 +13,14 @@ test_expect_success 'setup repo for dashboard tests' '
 	git commit -m "initial commit"
 '
 
-test_expect_success 'vibes-dashboard --web returns not-yet-available' '
-	test_expect_code 1 git vibes-dashboard --web
+test_expect_success 'vibes-dashboard --web starts server' '
+	{
+		git vibes-dashboard --web --port 3798 &
+	} &&
+	test_when_finished "kill $! 2>/dev/null || :" &&
+	sleep 1 &&
+	curl -s http://localhost:3798/ >dash.out &&
+	grep -q "gitvibes" dash.out
 '
 
 test_expect_success 'vibes-dashboard -h shows usage' '

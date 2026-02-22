@@ -81,6 +81,55 @@ int vibes_gate_run_all(struct repository *repo, struct vibes_db *db,
 		count++;
 	}
 
+	/* Custom gates from git config (vibes.gate.<name>.command) */
+	{
+		struct child_process cfg = CHILD_PROCESS_INIT;
+		struct strbuf out = STRBUF_INIT;
+
+		strvec_pushl(&cfg.args, "config", "--get-regexp",
+			     "^vibes\\.gate\\.", NULL);
+		cfg.git_cmd = 1;
+		cfg.no_stdin = 1;
+
+		if (capture_command(&cfg, &out, 0) == 0 && out.len > 0) {
+			const char *p = out.buf;
+			while (*p) {
+				const char *eol = strchr(p, '\n');
+				if (!eol)
+					eol = p + strlen(p);
+
+				if (starts_with(p, "vibes.gate.") &&
+				    strstr(p, ".command ")) {
+					/* Parse: vibes.gate.<name>.command <cmd> */
+					const char *name_start = p + 11; /* after "vibes.gate." */
+					const char *dot = strchr(name_start, '.');
+					const char *cmd_start = strstr(p, ".command ");
+
+					if (dot && cmd_start && cmd_start < eol) {
+						char *gname;
+						char *gcmd;
+
+						cmd_start += 9; /* skip ".command " */
+						gname = xstrndup(name_start, dot - name_start);
+						gcmd = xstrndup(cmd_start, eol - cmd_start);
+
+						REALLOC_ARRAY(res, count + 1);
+						memset(&res[count], 0, sizeof(res[count]));
+						vibes_gate_run(gname, gcmd, &res[count]);
+						if (!res[count].passed)
+							failed++;
+						count++;
+
+						free(gname);
+						free(gcmd);
+					}
+				}
+				p = *eol ? eol + 1 : eol;
+			}
+		}
+		strbuf_release(&out);
+	}
+
 	*results = res;
 	*nr_results = count;
 

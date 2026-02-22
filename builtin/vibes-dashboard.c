@@ -7,6 +7,7 @@
 #include "parse-options.h"
 #include <sqlite3.h>
 #include "libvibes/tui/tui.h"
+#include "libvibes/webui/webui.h"
 #include "libvibes/storage/db.h"
 
 static const char * const vibes_dashboard_usage[] = {
@@ -41,10 +42,16 @@ int cmd_vibes_dashboard(int argc, const char **argv, const char *prefix,
 	free(db_path);
 
 	if (web_mode) {
-		printf("gitvibes: web UI not yet available. "
-		       "Use TUI mode (without --web).\n");
+		struct vibes_webui webui;
+
+		if (vibes_webui_start(&webui, &db, repo, port) < 0) {
+			vibes_db_close(&db);
+			return 1;
+		}
+		vibes_webui_run(&webui);
+		vibes_webui_stop(&webui);
 		vibes_db_close(&db);
-		return 1;
+		return 0;
 	}
 
 	/* Launch ncurses TUI */

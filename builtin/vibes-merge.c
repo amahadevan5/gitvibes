@@ -13,6 +13,8 @@
 static const char * const vibes_merge_usage[] = {
 	"git vibes-merge <branch>",
 	"git vibes-merge --rollback",
+	"git vibes-merge --rollback-intent <id>",
+	"git vibes-merge --candidates <file>",
 	NULL
 };
 
@@ -21,9 +23,15 @@ int cmd_vibes_merge(int argc, const char **argv, const char *prefix,
 {
 	int rollback = 0;
 	int run_gates = 1;
+	const char *rollback_intent_id = NULL;
+	const char *candidates_file = NULL;
 	struct option options[] = {
 		OPT_BOOL(0, "rollback", &rollback,
 			 "rollback last vibes operation"),
+		OPT_STRING(0, "rollback-intent", &rollback_intent_id, "id",
+			   "rollback all commits for an intent"),
+		OPT_STRING(0, "candidates", &candidates_file, "file",
+			   "generate AI resolution candidates for conflicted file"),
 		OPT_BOOL(0, "gates", &run_gates,
 			 "run validation gates before merge (default: on)"),
 		OPT_END()
@@ -47,6 +55,42 @@ int cmd_vibes_merge(int argc, const char **argv, const char *prefix,
 		ret = vibes_rollback_last(&db, repo);
 		vibes_db_close(&db);
 		return ret < 0 ? 1 : 0;
+	}
+
+	if (rollback_intent_id) {
+		ret = vibes_rollback_intent(&db, repo, rollback_intent_id);
+		vibes_db_close(&db);
+		return ret < 0 ? 1 : 0;
+	}
+
+	if (candidates_file) {
+		struct vibes_conflict conflict;
+		struct resolution_candidate candidates[3];
+		int nr, j;
+
+		vibes_conflict_init(&conflict);
+		conflict.file_path = xstrdup(candidates_file);
+
+		/* Read conflict stages */
+		vibes_read_conflict_stage(&conflict.base, 1, candidates_file);
+		vibes_read_conflict_stage(&conflict.ours, 2, candidates_file);
+		vibes_read_conflict_stage(&conflict.theirs, 3, candidates_file);
+
+		nr = vibes_generate_candidates(&db, &conflict, candidates, 3);
+		if (nr > 0) {
+			for (j = 0; j < nr; j++) {
+				printf("Candidate %d (score: %.1f):\n%s\n---\n",
+				       j + 1, candidates[j].score,
+				       candidates[j].content.buf);
+				vibes_candidate_free(&candidates[j]);
+			}
+		} else {
+			printf("No AI candidates generated "
+			       "(check vibes.backend config)\n");
+		}
+		vibes_conflict_free(&conflict);
+		vibes_db_close(&db);
+		return 0;
 	}
 
 	if (argc < 1) {

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include "strbuf.h"
-#include "block-sha1/sha1.h"
+#include "hash.h"
 #include "libvibes/webui/webui.h"
 #include "libvibes/storage/db.h"
 
@@ -56,13 +56,13 @@ static char *base64_encode(const unsigned char *data, int len)
  */
 static char *compute_accept_key(const char *client_key)
 {
-	blk_SHA_CTX ctx;
+	git_SHA_CTX ctx;
 	unsigned char hash[20];
 
-	blk_SHA1_Init(&ctx);
-	blk_SHA1_Update(&ctx, client_key, strlen(client_key));
-	blk_SHA1_Update(&ctx, WS_MAGIC_GUID, strlen(WS_MAGIC_GUID));
-	blk_SHA1_Final(hash, &ctx);
+	git_SHA1_Init(&ctx);
+	git_SHA1_Update(&ctx, client_key, strlen(client_key));
+	git_SHA1_Update(&ctx, WS_MAGIC_GUID, strlen(WS_MAGIC_GUID));
+	git_SHA1_Final(hash, &ctx);
 
 	return base64_encode(hash, 20);
 }

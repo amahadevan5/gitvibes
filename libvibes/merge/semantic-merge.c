@@ -62,6 +62,26 @@ static int get_conflicted_files(struct string_list *files)
 }
 
 /*
+ * Read a conflict stage from the index via `git show :<stage>:<path>`.
+ * stage 1 = base, 2 = ours, 3 = theirs.
+ */
+int vibes_read_conflict_stage(struct strbuf *out, int stage, const char *path)
+{
+	struct child_process cp = CHILD_PROCESS_INIT;
+	struct strbuf spec = STRBUF_INIT;
+	int ret;
+
+	strbuf_addf(&spec, ":%d:%s", stage, path);
+	strvec_pushl(&cp.args, "show", spec.buf, NULL);
+	cp.git_cmd = 1;
+	cp.no_stdin = 1;
+
+	ret = capture_command(&cp, out, 0);
+	strbuf_release(&spec);
+	return ret;
+}
+
+/*
  * Mark a file as resolved.
  */
 static int mark_resolved(const char *file_path)
@@ -111,8 +131,15 @@ int vibes_semantic_merge(struct repository *repo, const char *branch,
 		vibes_conflict_init(&conflict);
 		conflict.file_path = xstrdup(path);
 
+		/* Read conflict stages from the index */
+		vibes_read_conflict_stage(&conflict.base, 1, path);
+		vibes_read_conflict_stage(&conflict.ours, 2, path);
+		vibes_read_conflict_stage(&conflict.theirs, 3, path);
+
 		/* Classify the conflict */
-		ctype = vibes_classify_conflict(NULL, NULL, NULL, path);
+		ctype = vibes_classify_conflict(conflict.ours.buf,
+						conflict.theirs.buf,
+						conflict.base.buf, path);
 		conflict.type = ctype;
 
 		printf("  %s: %s", path,
@@ -122,6 +149,14 @@ int vibes_semantic_merge(struct repository *repo, const char *branch,
 
 		if (ctype == CONFLICT_SAFE_AUTO) {
 			if (vibes_auto_resolve(&conflict) == 0) {
+				/* Write resolved content back to working tree */
+				FILE *f = fopen(path, "w");
+				if (f) {
+					fwrite(conflict.resolved.buf, 1,
+					       conflict.resolved.len, f);
+					fclose(f);
+					mark_resolved(path);
+				}
 				printf(" -> resolved\n");
 				auto_resolved++;
 			} else {
